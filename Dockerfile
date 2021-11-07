@@ -1,17 +1,17 @@
-FROM alpine:3.9
-
-LABEL Maintainer="Craig Manley https://github.com/cmanley" \
-      Description="GitList (an elegant git repository viewer) using nginx, php-fpm 7.2, and Alpine Linux 3.9"
+FROM alpine:3.18
 
 RUN apk update && apk --no-cache add \
 	git \
 	nginx \
-	php7 \
-	php7-ctype \
-	php7-fpm \
-	php7-json \
-	php7-mbstring \
-	php7-simplexml \
+	php82 \
+	php82-ctype \
+	php82-dom \
+	php82-fpm \
+	php82-json \
+	php82-mbstring \
+	php82-session \
+	php82-simplexml \
+	php82-tokenizer \
 	supervisor
 
 
@@ -23,11 +23,11 @@ RUN mkdir -p "$REPOSITORY_DUMMY" \
 
 
 ### gitlist ####
-ARG GITLIST_DOWNLOAD_FILENAME='gitlist-1.0.2.tar.gz'
-ARG GITLIST_DOWNLOAD_URL="https://github.com/klaussilveira/gitlist/releases/download/1.0.2/$GITLIST_DOWNLOAD_FILENAME"
-ARG GITLIST_DOWNLOAD_SHA256=38728b688f6600ad97b6d5900b472da6529ff7f3b8c0669ada25ae0bb65d34d9
-RUN NEED='wget'; \
-	DEL='' \
+ARG GITLIST_DOWNLOAD_FILENAME='p3x-gitlist-v2022.4.106.zip'
+ARG GITLIST_DOWNLOAD_URL="https://github.com/patrikx3/gitlist/releases/download/v2022.4.106/$GITLIST_DOWNLOAD_FILENAME"
+ARG GITLIST_DOWNLOAD_SHA256=356435b3f24a4bcb531eab3437ceed273ec0a6a8a02b556d618d16ed6d40af52
+RUN NEED='wget unzip sed'; \
+	DEL='unzip' \
 	&& for x in $NEED; do \
 		if [ $(apk list "$x" | grep -F [installed] | wc -l) -eq 0 ]; then \
 			DEL="$DEL $x" \
@@ -39,23 +39,15 @@ RUN NEED='wget'; \
 	&& wget -q "$GITLIST_DOWNLOAD_URL" -O "$GITLIST_DOWNLOAD_FILENAME" \
 	&& sha256sum "$GITLIST_DOWNLOAD_FILENAME" \
 	&& echo "$GITLIST_DOWNLOAD_SHA256  $GITLIST_DOWNLOAD_FILENAME" | sha256sum -c - \
-	&& tar -xf "$GITLIST_DOWNLOAD_FILENAME" \
+	&& unzip -u "$GITLIST_DOWNLOAD_FILENAME" -d gitlist \
 	&& rm "$GITLIST_DOWNLOAD_FILENAME" \
 	&& if [ -n "$DEL" ]; then echo "Delete temporary package(s) $DEL" && apk del $DEL; fi \
 	&& mkdir -p gitlist/cache \
-	&& chmod a+trwx gitlist/cache;
-
-# Create an alternate bootstrap3 theme called bootstrap3-wide having 100% width instead of a limited set of 'adaptive' widths.
-RUN cd /var/www/gitlist/themes \
-	&& cp -al bootstrap3 bootstrap3-wide \
-	&& rm bootstrap3-wide/css/style.css \
-	&& cp bootstrap3/css/style.css bootstrap3-wide/css/style.css \
-	&& sed -E -i -e 's/(@media ?\(min-width:[0-9]+px\)\{\.container\{width:[0-9]+px\}\})+/.container{width:100%}/' bootstrap3-wide/css/style.css \
-	&& rm bootstrap3-wide/twig/commits_list.twig \
-	&& cp bootstrap3/twig/commits_list.twig bootstrap3-wide/twig/commits_list.twig \
-	&& sed -i -e 's/date("F j, Y")/date("l, j F Y")/' bootstrap3-wide/twig/commits_list.twig
+	&& chmod a+trwx gitlist/cache \
+	&& rm gitlist/public/web.config \
+	&& rm gitlist/public/.htaccess
 
 COPY copy /
-EXPOSE 80
+EXPOSE 8080
 ENTRYPOINT ["/docker-entrypoint.sh"]
 CMD ["gitlist"]

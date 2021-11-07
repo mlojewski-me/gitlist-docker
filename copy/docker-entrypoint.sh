@@ -19,9 +19,9 @@ fi
 if [ "$(echo $1 | cut -c1-7)" = 'gitlist' ] || [ "$1" = 'shell' ]; then
 	GITLIST_ROOT='/var/www/gitlist'
 	GITLIST_CACHE_DIR="$GITLIST_ROOT/cache"
-	GITLIST_THEMES_DIR="$GITLIST_ROOT/themes"
 	GITLIST_CONFIG_FILE="$GITLIST_ROOT/config.ini"
-	PHP_FPM_GID_FILE='/etc/php7/php-fpm.d/zz_gid.conf'
+	PHP_FPM_GID_FILE='/etc/php82/php-fpm.d/zz_gid.conf'
+	PHP_FPM_UID_FILE='/etc/php82/php-fpm.d/zz_uid.conf'
 
 	# Set gid of php-fpm so that it can read the host's volume
 	if [ ! -d "$REPOSITORY_DUMMY" ]; then
@@ -58,38 +58,26 @@ if [ "$(echo $1 | cut -c1-7)" = 'gitlist' ] || [ "$1" = 'shell' ]; then
 			fi
 			printf "\n[www]\ngroup=%s\n" "$GROUP" > "$PHP_FPM_GID_FILE"
 			chgrp -R "$GROUP" "$GITLIST_CACHE_DIR"
-			echo "$0: php-fpm gid set to $GITLIST_GID($GROUP)"
+			echo "$0: php-fpm gid set to $GITLIST_GID ($GROUP)"
+		fi
+		if [ -n "$GITLIST_UID" ]; then
+			printf "\n[www]\nuser=%s\n" "$GITLIST_UID" > "$PHP_FPM_UID_FILE"
+			chown -R "$GITLIST_UID" "$GITLIST_CACHE_DIR"
+			echo "$0: php-fpm uid set to $GITLIST_UID"
 		fi
 	fi
 
-	# Optionally set the gitlist debug flag to true or false
-	if [ -n "$GITLIST_DEBUG" ]; then
-		CURRENT_DEBUG=$(sed -En 's/^debug\s*=\s*(\S+)\s*$/\1/p' < "$GITLIST_CONFIG_FILE")
-		if [ "$GITLIST_DEBUG" = "$CURRENT_DEBUG" ]; then
-			echo "$0: gitlist debug value is already \"$GITLIST_DEBUG\""
-		else
-			if [ "$GITLIST_DEBUG" = 'true' ] || [ "$GITLIST_DEBUG" = 'false' ]; then
-				sed -E -i -e 's/^(debug\s*=\s*).+/\1'"$GITLIST_DEBUG"'/' "$GITLIST_CONFIG_FILE"
-				echo "$0: gitlist debug value changed to \"$GITLIST_DEBUG\""
-			else
-				echo "$0: Bad syntax in GITLIST_DEBUG environment variable ($GITLIST_DEBUG)"
-			fi
-		fi
+	# Set SSH host
+	if [ -n "$SSH_HOST" ]; then
+		sed -i 's/^\(show_ssh_remote =\).*$/\1 true/g' "$GITLIST_CONFIG_FILE"
+		sed -i "s/^\(ssh_host =\).*$/\1 '${SSH_HOST}'/g" "$GITLIST_CONFIG_FILE"
+	else
+		sed -i 's/^\(show_ssh_remote =\).*$/\1 false/g' "$GITLIST_CONFIG_FILE"
 	fi
 
-	# Optionally set gitlist theme
-	if [ -n "$GITLIST_THEME" ]; then
-		CURRENT_THEME=$(sed -En 's/^theme\s*=\s*['"'"'"](.+?)['"'"'"]\s*$/\1/p' < "$GITLIST_CONFIG_FILE")
-		if [ "$GITLIST_THEME" = "$CURRENT_THEME" ]; then
-			echo "$0: gitlist theme is already \"$GITLIST_THEME\""
-		else
-			if [ -d "$GITLIST_THEMES_DIR/$GITLIST_THEME" ]; then
-				sed -E -i -e 's/^(theme\s*=\s*).+/\1"'"$GITLIST_THEME"'"/' "$GITLIST_CONFIG_FILE"
-				echo "$0: gitlist theme changed to \"$GITLIST_THEME\""
-			else
-				echo "$0: gitlist theme \"$GITLIST_THEME\" does not exist"
-			fi
-		fi
+	# Set SSH host
+	if [ -n "$TITLE" ]; then
+		sed -i "s/^\(title =\).*$/\1 '${TITLE}'/g" "$GITLIST_CONFIG_FILE"
 	fi
 
 	if [ "$1" = 'shell' ]; then
