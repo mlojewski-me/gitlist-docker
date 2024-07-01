@@ -1,17 +1,17 @@
-FROM alpine:3.18
+FROM alpine:3.20
 
 RUN apk update && apk --no-cache add \
 	git \
 	nginx \
-	php82 \
-	php82-ctype \
-	php82-dom \
-	php82-fpm \
-	php82-json \
-	php82-mbstring \
-	php82-session \
-	php82-simplexml \
-	php82-tokenizer \
+	php83 \
+	php83-ctype \
+	php83-dom \
+	php83-fpm \
+	php83-json \
+	php83-mbstring \
+	php83-session \
+	php83-simplexml \
+	php83-tokenizer \
 	supervisor
 
 
@@ -23,9 +23,9 @@ RUN mkdir -p "$REPOSITORY_DUMMY" \
 
 
 ### gitlist ####
-ARG GITLIST_DOWNLOAD_FILENAME='p3x-gitlist-v2022.4.106.zip'
-ARG GITLIST_DOWNLOAD_URL="https://github.com/patrikx3/gitlist/releases/download/v2022.4.106/$GITLIST_DOWNLOAD_FILENAME"
-ARG GITLIST_DOWNLOAD_SHA256=356435b3f24a4bcb531eab3437ceed273ec0a6a8a02b556d618d16ed6d40af52
+ARG GITLIST_DOWNLOAD_FILENAME='p3x-gitlist-v2024.4.105.zip'
+ARG GITLIST_DOWNLOAD_URL="https://github.com/patrikx3/gitlist/releases/download/v2024.4.105/$GITLIST_DOWNLOAD_FILENAME"
+ARG GITLIST_DOWNLOAD_SHA256=2b226c8f7366af903c3ae696d7fff27927e00b9c050df7663064e3d3715f8b8e
 RUN NEED='wget unzip sed'; \
 	DEL='unzip' \
 	&& for x in $NEED; do \

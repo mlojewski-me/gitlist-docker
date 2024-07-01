@@ -20,8 +20,8 @@ if [ "$(echo $1 | cut -c1-7)" = 'gitlist' ] || [ "$1" = 'shell' ]; then
 	GITLIST_ROOT='/var/www/gitlist'
 	GITLIST_CACHE_DIR="$GITLIST_ROOT/cache"
 	GITLIST_CONFIG_FILE="$GITLIST_ROOT/config.ini"
-	PHP_FPM_GID_FILE='/etc/php82/php-fpm.d/zz_gid.conf'
-	PHP_FPM_UID_FILE='/etc/php82/php-fpm.d/zz_uid.conf'
+	PHP_FPM_GID_FILE='/etc/php83/php-fpm.d/zz_gid.conf'
+	PHP_FPM_UID_FILE='/etc/php83/php-fpm.d/zz_uid.conf'
 
 	# Set gid of php-fpm so that it can read the host's volume
 	if [ ! -d "$REPOSITORY_DUMMY" ]; then
